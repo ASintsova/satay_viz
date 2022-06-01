@@ -2,6 +2,6 @@ numpy == 1.19.2
 pandas == 1.0.1
 plotly == 5.5.0
 scipy == 1.7.3
-streamlit == 1.4.0
+streamlit == 1.8.1
 click==7.1.2
-pyranges
+pyranges==0.0.117
