@@ -5,10 +5,11 @@ import plotly.express as px
 import numpy as np
 
 from multipage import MultiPage
-from pages import Analysis, Graphs, Count
+from pages import Analysis, Graphs, Count, Home
 
 app = MultiPage()
-pages = {'Count': ('Count', Count.app),
+pages = {'Home': ('Home', Home.app),
+         'Count': ('Count', Count.app),
          'Analysis': ('Analysis', Analysis.app),
          'Graphs': ('Graphs', Graphs.app)}
 

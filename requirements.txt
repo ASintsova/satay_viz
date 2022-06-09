@@ -7,4 +7,4 @@ click==7.1.2
 sorted_nearest==0.0.33
 pyranges==0.0.117
 statsmodels==0.12.1
-protobuf~=3.19.0
+protobuf==3.19.1
