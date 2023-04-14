@@ -166,8 +166,14 @@ def app():
             df3['hits2'] = df3[f'{exp_name}_hits'].astype(int) + df3[f'{exp_name2}_hits'].astype(int)
             hit_labels = {0: 'Not a hit', 1: 'Hit in one of the comparisons', 2: 'Hit in both comparisons'}
             df3['hits'] = df3['hits2'].map(hit_labels)
+            st.subheader('Hits in only one of the 2 conditions:')
+            st.write(df3[df3.hits == 'Hit in one of the comparisons'][['location', f'{exp_name}_foldChange',
+                                                                       f"{exp_name2}_foldChange",
+                                                                       'gene', 'locus_tag', 'Distance']])
             fig3 = px.scatter(df3, x=f"{exp_name}_foldChange", y=f'{exp_name2}_foldChange',
-                              color='hits', height=800, width=800)
+                              color='hits', height=800, width=800, hover_data=['location', 'gene', 'locus_tag',  'Distance'],
+                              color_discrete_map={'Not a hit': 'grey', 'Hit in one of the comparisons': px.colors.qualitative.Plotly[1],
+                                                  'Hit in both comparisons': px.colors.qualitative.Plotly[0]})
             fig3.update_traces(marker=dict(
                 opacity=0.7,
                 size=12,
@@ -230,3 +236,5 @@ def app():
             c4.write(gdf2.sort_values('Start')[['location', 'foldChange',
                                             'padj', 'gene', 'Distance', 'gene_start',
                                             'gene_end', 'Strand']])
+
+app()

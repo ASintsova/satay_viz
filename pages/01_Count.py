@@ -55,3 +55,4 @@ def app():
     # else:
     #     df_list = list(ic.overlaps.values())
     #     st.write(df_list[0].head())
+app()

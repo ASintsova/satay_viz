@@ -55,4 +55,4 @@ def app():
     else:
         st.write('Choose conditions and press "Compare"')
 
-
+app()
