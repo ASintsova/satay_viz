@@ -4,6 +4,11 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
 
 def show_chrom_view(res_df, name, chrom, pval_th):
     logpval = f'{name}_logpval'
@@ -167,9 +172,18 @@ def app():
             hit_labels = {0: 'Not a hit', 1: 'Hit in one of the comparisons', 2: 'Hit in both comparisons'}
             df3['hits'] = df3['hits2'].map(hit_labels)
             st.subheader('Hits in only one of the 2 conditions:')
-            st.write(df3[df3.hits == 'Hit in one of the comparisons'][['location', f'{exp_name}_foldChange',
+            one_condition_hits = df3[df3.hits == 'Hit in one of the comparisons'][['location', f'{exp_name}_foldChange',
                                                                        f"{exp_name2}_foldChange",
-                                                                       'gene', 'locus_tag', 'Distance']])
+                                                                       'gene', 'locus_tag', 'Distance']]
+            st.write(one_condition_hits)
+            csv = convert_df(one_condition_hits)
+            st.download_button(
+                label="Download hits as CSV",
+                data=csv,
+                file_name=f"{exp_name}_{exp_name2}.csv",
+                mime='text/csv',
+            )
+
             fig3 = px.scatter(df3, x=f"{exp_name}_foldChange", y=f'{exp_name2}_foldChange',
                               color='hits', height=800, width=800, hover_data=['location', 'gene', 'locus_tag',  'Distance'],
                               color_discrete_map={'Not a hit': 'grey', 'Hit in one of the comparisons': px.colors.qualitative.Plotly[1],
