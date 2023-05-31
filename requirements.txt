@@ -1,6 +1,6 @@
+numpy == 1.19.2
 sorted_nearest==0.0.33
 pyranges==0.0.117
-numpy
 pandas
 plotly == 5.5.0
 scipy
