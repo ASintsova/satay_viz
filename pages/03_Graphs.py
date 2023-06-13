@@ -4,7 +4,9 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
-@st.cache
+st.set_page_config(page_title="SATAY", layout="wide")
+
+@st.cache_data
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode('utf-8')
@@ -167,8 +169,8 @@ def app():
             st.plotly_chart(fig2, use_container_width=True)
             df3 = df1.merge(df2[['location', f'{exp_name2}_foldChange',
                                  f'{exp_name2}_logpval',
-                                 f'{exp_name2}_hits']], how='inner', on='location')
-            df3['hits2'] = df3[f'{exp_name}_hits'].astype(int) + df3[f'{exp_name2}_hits'].astype(int)
+                                 f'{exp_name2}_hits']], how='outer', on='location')
+            df3['hits2'] = df3[f'{exp_name}_hits'].fillna(0).astype(int) + df3[f'{exp_name2}_hits'].fillna(0).astype(int)
             hit_labels = {0: 'Not a hit', 1: 'Hit in one of the comparisons', 2: 'Hit in both comparisons'}
             df3['hits'] = df3['hits2'].map(hit_labels)
             st.subheader('Hits in only one of the 2 conditions:')
