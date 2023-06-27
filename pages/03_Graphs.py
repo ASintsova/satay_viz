@@ -167,9 +167,10 @@ def app():
             df2, fig2 = show_chrom_view(fres2, exp_name2, chrom, pval_th)
             st.subheader(exp_name2)
             st.plotly_chart(fig2, use_container_width=True)
-            df3 = df1.merge(df2[['location', f'{exp_name2}_foldChange',
+            df3 = df1.merge(df2[['location', 'gene', 'locus_tag', 'Distance',
+                                 f'{exp_name2}_foldChange',
                                  f'{exp_name2}_logpval',
-                                 f'{exp_name2}_hits']], how='outer', on='location')
+                                 f'{exp_name2}_hits']], how='outer', on=['location', 'gene', 'locus_tag', 'Distance'])
             df3['hits2'] = df3[f'{exp_name}_hits'].fillna(0).astype(int) + df3[f'{exp_name2}_hits'].fillna(0).astype(int)
             hit_labels = {0: 'Not a hit', 1: 'Hit in one of the comparisons', 2: 'Hit in both comparisons'}
             df3['hits'] = df3['hits2'].map(hit_labels)
