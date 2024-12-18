@@ -35,9 +35,11 @@ def show_chrom_view(res_df,  chrom,):
 
 
 def extract_gene_info(df, gene_list, gene_col='gene', cutoff=0.05):
+    andf = pd.read_table("annotations_full.tsv")
     gdf = df[df[gene_col].isin(gene_list)].copy()
     gdf['hits'] = gdf.padj < cutoff
     gdf['clrs'] = [px.colors.qualitative.Plotly[1] if c else px.colors.qualitative.Plotly[0] for c in gdf.hits.values]
+    gdf = gdf.merge(andf[['locus_tag', 'Strand']], left_on='locus_tag_b', right_on='locus_tag', how='left')
     gene_info = {}
     for gene in gene_list:
         one_gene_df = gdf[gdf[gene_col] == gene]
@@ -48,7 +50,7 @@ def extract_gene_info(df, gene_list, gene_col='gene', cutoff=0.05):
             rheight=0.2,
             point=(one_gene_df.gene_start.values[0], -0.1), strand=list(one_gene_df.Strand.unique())[0])
 
-    gene_info['intervals'] = dict(y_intervals=gdf.foldChange.values,
+    gene_info['intervals'] = dict(y_intervals=gdf.log2FoldChange.values,
                                   x0_intervals=gdf.Start.values,
                                   x1_intervals=gdf.End.values, clrs=gdf.clrs.values)
     return gdf, gene_info
@@ -87,7 +89,7 @@ def draw_gene_and_intervals(line_info, gdf, gene_def, x_text, gene_list):
     # Set axes properties
     fig.update_xaxes(range=[min(line_info['x0_intervals']) - 100, max(line_info['x1_intervals']) + 100], showgrid=False,
                      title='Position, bp')
-    fig.update_yaxes(range=[gdf.foldChange.min() - 0.5, gdf.foldChange.max() + 0.5], title='log2 fold change')
+    fig.update_yaxes(range=[gdf.log2FoldChange.min() - 0.5, gdf.log2FoldChange.max() + 0.5], title='log2 fold change')
     fig.update_layout(
         # filled Triangle
         height=600,
@@ -211,24 +213,24 @@ def app():
             st.plotly_chart(fig3, use_container_width=True)
 
 
-#     with st.expander("Gene-level View"):
-#         st.markdown("This graph shows intervals (shown as horizontal lines) and their lfcs near a gene of interest.")
-#         gene_list = st.multiselect('Choose gene(s) of interest', list(fres.gene.unique()))
-#         if not gene_list:
-#             st.stop()
+    with st.expander("Gene-level View"):
+        st.markdown("This graph shows intervals (shown as horizontal lines) and their lfcs near a gene of interest.")
+        gene_list = st.multiselect('Choose gene(s) of interest', list(fres.gene.unique()))
+        if not gene_list:
+            st.stop()
 
-#         gdf, gene_info = extract_gene_info(fres, gene_list, cutoff=pval_th)
-#         gene_def = draw_gene(gene_info)
-#         line_info = gene_info['intervals']
+        gdf, gene_info = extract_gene_info(fres, gene_list, cutoff=pval_th)
+        gene_def = draw_gene(gene_info)
+        line_info = gene_info['intervals']
 
-#         x_text = []
-#         for d in gene_def:
-#             if d['type'] == 'rect':
-#                 x_text.append(d['x0'] + ((d['x1'] - d['x0'])/2))
+        x_text = []
+        for d in gene_def:
+            if d['type'] == 'rect':
+                x_text.append(d['x0'] + ((d['x1'] - d['x0'])/2))
 
-#         fig4 = draw_gene_and_intervals(line_info, gdf, gene_def, x_text, gene_list)
-#         st.subheader(exp_name)
-#         st.plotly_chart(fig4, use_container_width=True)
+        fig4 = draw_gene_and_intervals(line_info, gdf, gene_def, x_text, gene_list)
+        st.subheader(exp_name)
+        st.plotly_chart(fig4, use_container_width=True)
 #         c3, c4 = st.columns(2)
 #         if results_file2:
 #             if all([gene in list(fres2.gene.unique()) for gene in gene_list]):
