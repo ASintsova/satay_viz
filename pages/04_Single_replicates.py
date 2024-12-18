@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def generate_upset_plot(df):
-    unique_values = pd.unique(df.dropna().values.ravel())
+    unique_values = pd.unique(df.values.ravel())
     result = pd.DataFrame(
         {val: df.apply(lambda col: col == val).any(axis=0) for val in unique_values},
         index=df.columns
@@ -32,8 +32,7 @@ def app():
     if not hits_file:
         st.warning("No file uploaded. Showing an example UpSet plot.")
     else:
-        upset_df = pd.read_csv(hits_file, index_col=0)
-
+        upset_df = pd.read_csv(hits_file)
     fig, result = generate_upset_plot(upset_df)
     st.pyplot(fig)
 
