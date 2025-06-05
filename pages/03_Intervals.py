@@ -122,7 +122,7 @@ def app():
     results_file = st.file_uploader('Upload interval-results file')
     if not results_file:
         st.caption("Example interval data")
-        results_file = "examples/example_inteval_file.csv"
+        results_file = "examples/example_inteval_file.csv.gz"
         exp_name = 'Example interval data'
     else:
         st.markdown("#### Step 2: Enter the name/label for the comparison")
