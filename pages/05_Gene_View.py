@@ -6,6 +6,22 @@ import gzip
 import numpy as np
 import tempfile
 import os
+import sys
+sys.path.append('src')
+from clean_sample_ids import edit_sample_id
+
+def clean_filename(filename):
+    """Clean up filename using only the edit_sample_id function"""
+    try:
+        # Extract base name and split at .bam
+        base_name = filename.split(".bam")[0]
+        # Apply only the first cleanup step
+        cleaned_name = edit_sample_id(base_name)
+        return cleaned_name
+    except Exception as e:
+        # If cleanup fails, return original filename
+        st.warning(f"Could not clean filename '{filename}': {e}")
+        return filename
 
 @st.cache_data
 def get_annotations(annotation_file="annotations.tsv"):
@@ -108,6 +124,28 @@ def create_gene_visualization(gene_info, overlapping_insertions, file_name="", y
             showarrow=False,
             font=dict(size=8, color="darkblue"),
             xanchor="left"
+        )
+    
+    # Add strand direction indicator
+    if gene_strand == '+':
+        # Positive strand: 5' on the left
+        fig.add_annotation(
+            x=region_start,
+            y=y_offset-0.6,
+            text="5'",
+            showarrow=False,
+            font=dict(size=10, color="black"),
+            xanchor="left"
+        )
+    elif gene_strand == '-':
+        # Negative strand: 5' on the right
+        fig.add_annotation(
+            x=region_end,
+            y=y_offset-0.6,
+            text="5'",
+            showarrow=False,
+            font=dict(size=10, color="black"),
+            xanchor="right"
         )
     
     min_log_abundance = 0
@@ -358,12 +396,18 @@ def app():
     all_max_log = []
     file_stats = []
     
-    for i, (file_name, insertions_df) in enumerate(file_data.items()):
+    # Sort files by filename for consistent display order
+    sorted_file_data = dict(sorted(file_data.items()))
+    
+    for i, (file_name, insertions_df) in enumerate(sorted_file_data.items()):
         # Find overlapping insertions
         overlapping_insertions = find_overlapping_insertions(gene_info, insertions_df, chr_mapping)
         
+        # Clean up file name for display
+        display_name = clean_filename(file_name)
+        
         # Create visualization for this file
-        fig, min_log, max_log = create_gene_visualization(gene_info, overlapping_insertions, file_name, y_offset=i*2)
+        fig, min_log, max_log = create_gene_visualization(gene_info, overlapping_insertions, display_name, y_offset=i*2)
         all_figures.append(fig)
         all_min_log.append(min_log)
         all_max_log.append(max_log)
@@ -378,7 +422,7 @@ def app():
         
         # Collect stats
         stats = {
-            'File': file_name,
+            'File': display_name,
             'Total Insertions': len(insertions_df),
             'Total Reads': int(insertions_df['Abundance'].sum()),
             'Overlapping Insertions': len(overlapping_insertions)
@@ -418,11 +462,17 @@ def app():
         region_end = gene_end + 500
         num_files = len(file_data)
         
+        # Calculate y-axis range based on actual y_offset values
+        # Files are positioned at y_offset = i*2, with gene rectangles spanning ±0.8
+        # So range should be from -0.8-padding to (num_files-1)*2+0.8+padding
+        y_min = -0.8 - 0.5  # bottom of first file with padding
+        y_max = (num_files-1)*2 + 0.8 + 0.5  # top of last file with padding
+        
         combined_fig.update_layout(
             title=f"Gene View: {selected_gene} (±500bp)",
             xaxis_title="Genomic Position",
             yaxis_title="Files",
-            yaxis=dict(range=[-(num_files*2-1)*0.5-1.3, (num_files*2-1)*0.5+1.3], showticklabels=False),
+            yaxis=dict(range=[y_min, y_max], showticklabels=False),
             height=200 + num_files * 150,
             showlegend=False,
             template="plotly_white",
@@ -450,10 +500,11 @@ def app():
         st.plotly_chart(combined_fig, use_container_width=True)
         
         # Show detailed data for each file
-        for file_name, insertions_df in file_data.items():
+        for file_name, insertions_df in sorted_file_data.items():
             overlapping_insertions = find_overlapping_insertions(gene_info, insertions_df, chr_mapping)
             if not overlapping_insertions.empty:
-                with st.expander(f"Detailed insertions for {file_name} ({len(overlapping_insertions)} insertions)"):
+                display_name = clean_filename(file_name)
+                with st.expander(f"Detailed insertions for {display_name} ({len(overlapping_insertions)} insertions)"):
                     st.dataframe(overlapping_insertions.sort_values('Abundance', ascending=False))
 
 app()
