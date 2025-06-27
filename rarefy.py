@@ -112,3 +112,35 @@ def rarefy_insertion_file(input_file, output_file, depth=100000, seed=42):
     df.to_csv(output_file, sep='\t', header=False, index=False)
     
     return df
+
+def rarefy_binomial(x, d, seed=42):
+    """
+    Rarefy a count vector using binomial sampling.
+    
+    Parameters:
+    - x (numpy.ndarray): Input count vector to be rarefied
+    - d (float): Proportion to keep (between 0 and 1)
+    - seed (int, optional): Random seed for reproducibility. Default is 42.
+    
+    Returns:
+    numpy.ndarray: Rarefied vector with binomial sampling applied to each element
+    """
+    # Convert pandas Series or lists to numpy array if needed
+    if not isinstance(x, np.ndarray):
+        x = np.array(x)
+    
+    # Validate inputs
+    if d < 0 or d > 1:
+        raise ValueError("Proportion d must be between 0 and 1")
+    
+    if len(x) == 0:
+        return np.array([])
+    
+    # Set random seed
+    np.random.seed(seed)
+    
+    # Apply binomial sampling to each element
+    # For each count in x, sample from binomial distribution with n=count, p=d
+    rarefied = np.array([np.random.binomial(count, d) for count in x])
+    
+    return rarefied
